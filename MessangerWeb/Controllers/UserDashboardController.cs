@@ -58,7 +58,7 @@ namespace MessangerWeb.Controllers
 
             var firstName = HttpContext.Session.GetString("FirstName");
             var lastName = HttpContext.Session.GetString("LastName");
-            var currentUser = GetUserById(userId);
+            var currentUser = await GetUserById(userId);
 
             var model = new UserDashboardViewModel
             {
@@ -66,8 +66,8 @@ namespace MessangerWeb.Controllers
                 UserId = userId,
                 UserEmail = userEmail,
                 UserPhotoBase64 = currentUser?.PhotoBase64,
-                Users = GetAllUsersWithLastMessage(userId, userEmail),
-                Groups = GetUserGroups(userEmail)
+                Users = await GetAllUsersWithLastMessage(userId, userEmail),
+                Groups = await GetUserGroups(userEmail)
             };
 
             if (!string.IsNullOrEmpty(selectedUserId))
@@ -78,7 +78,7 @@ namespace MessangerWeb.Controllers
                     model.Messages = await GetMessages(userEmail, model.SelectedUser.Email);
                     model.CurrentViewType = "user";
                     // Mark messages as read immediately when chat is opened
-                    MarkMessagesAsRead(userEmail, model.SelectedUser.Email);
+                    await MarkMessagesAsRead(userEmail, model.SelectedUser.Email);
                 }
             }
             else if (selectedGroupId.HasValue)
@@ -86,10 +86,10 @@ namespace MessangerWeb.Controllers
                 model.SelectedGroup = model.Groups.FirstOrDefault(g => g.GroupId == selectedGroupId.Value);
                 if (model.SelectedGroup != null)
                 {
-                    model.GroupMessages = GetGroupMessagesByGroupId(selectedGroupId.Value, userEmail);
+                    model.GroupMessages = await GetGroupMessagesByGroupId(selectedGroupId.Value, userEmail);
                     model.CurrentViewType = "group";
                     // Mark group messages as read immediately when chat is opened - FOR CURRENT USER ONLY
-                    MarkGroupMessagesAsReadForUser(userEmail, selectedGroupId.Value);
+                    await MarkGroupMessagesAsReadForUser(userEmail, selectedGroupId.Value);
                 }
             }
 
@@ -109,7 +109,7 @@ namespace MessangerWeb.Controllers
 
             try
             {
-                var receiverUser = GetUserById(receiverId);
+                var receiverUser = await GetUserById(receiverId);
                 if (receiverUser == null)
                 {
                     return Json(new { success = false, message = "Receiver not found" });
@@ -261,7 +261,7 @@ namespace MessangerWeb.Controllers
 
             try
             {
-                var receiverUser = GetUserById(receiverId);
+                var receiverUser = await GetUserById(receiverId);
                 if (receiverUser == null)
                 {
                     return Json(new { success = false, message = "Receiver not found" });
@@ -331,13 +331,13 @@ namespace MessangerWeb.Controllers
                 return Json(new { success = false, message = "Invalid user data" });
             }
 
-            var otherUser = GetUserById(otherUserId);
+            var otherUser = await GetUserById(otherUserId);
             if (otherUser == null)
             {
                 return Json(new { success = false, message = "User not found" });
             }
 
-            var messages = GetMessages(currentUserEmail, otherUser.Email);
+            var messages = await GetMessages(currentUserEmail, otherUser.Email);
             return Json(new { success = true, messages = messages });
         }
 
@@ -534,7 +534,7 @@ namespace MessangerWeb.Controllers
 
             try
             {
-                var user = GetUserById(userId);
+                var user = await GetUserById(userId);
                 if (user != null)
                 {
                     return Json(new
@@ -1087,13 +1087,13 @@ namespace MessangerWeb.Controllers
                     return Json(new { success = false });
                 }
 
-                var otherUser = GetUserById(otherUserId);
+                var otherUser = await GetUserById(otherUserId);
                 if (otherUser == null)
                 {
                     return Json(new { success = false });
                 }
 
-                var result = MarkMessagesAsRead(userEmail, otherUser.Email);
+                var result = await MarkMessagesAsRead(userEmail, otherUser.Email);
                 return Json(new { success = result });
             }
             catch (Exception ex)
