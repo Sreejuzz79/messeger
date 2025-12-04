@@ -25,18 +25,19 @@ namespace MessangerWeb.Controllers
         private readonly IVideoCallParticipantService _videoCallParticipantService;
 
         public UserDashboardController(
+            PostgreSqlConnectionService dbService,
             IVideoCallHistoryService videoCallHistoryService,
             IVideoCallParticipantService videoCallParticipantService,
             ILogger<UserDashboardController> logger,
             IConfiguration configuration)
         {
+            _dbService = dbService;
             _videoCallHistoryService = videoCallHistoryService;
             _videoCallParticipantService = videoCallParticipantService;
             _logger = logger;
-            _dbService = dbService;
         }
 
-        public IActionResult Index(string selectedUserId = null, int? selectedGroupId = null)
+        public async Task<IActionResult> Index(string selectedUserId = null, int? selectedGroupId = null)
         {
             var userType = HttpContext.Session.GetString("UserType");
             var userId = HttpContext.Session.GetString("UserId");
@@ -96,7 +97,7 @@ namespace MessangerWeb.Controllers
         }
 
         [HttpPost]
-        public IActionResult SendMessage(string receiverId, string messageText)
+        public async Task<IActionResult> SendMessage(string receiverId, string messageText)
         {
             var senderId = HttpContext.Session.GetString("UserId");
             var senderEmail = HttpContext.Session.GetString("Email");
@@ -248,7 +249,7 @@ namespace MessangerWeb.Controllers
 
 
         [HttpPost]
-        public IActionResult SendFile(IFormFile file, string receiverId)
+        public async Task<IActionResult> SendFile(IFormFile file, string receiverId)
         {
             var senderId = HttpContext.Session.GetString("UserId");
             var senderEmail = HttpContext.Session.GetString("Email");
@@ -320,7 +321,7 @@ namespace MessangerWeb.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetMessages(string otherUserId)
+        public async Task<IActionResult> GetMessages(string otherUserId)
         {
             var currentUserId = HttpContext.Session.GetString("UserId");
             var currentUserEmail = HttpContext.Session.GetString("Email");
@@ -340,7 +341,7 @@ namespace MessangerWeb.Controllers
             return Json(new { success = true, messages = messages });
         }
 
-        private List<ChatMessage> GetMessages(string currentUserEmail, string otherUserEmail)
+        private async Task<List<ChatMessage>> GetMessages(string currentUserEmail, string otherUserEmail)
         {
             var messages = new List<ChatMessage>();
 
@@ -402,7 +403,7 @@ namespace MessangerWeb.Controllers
             return messages;
         }
 
-        private UserInfo GetUserById(string userId)
+        private async Task<UserInfo> GetUserById(string userId)
         {
             try
             {
@@ -554,7 +555,7 @@ namespace MessangerWeb.Controllers
         }
 
         [HttpPost]
-        public IActionResult UpdateProfile(ProfileUpdateModel model)
+        public async Task<IActionResult> UpdateProfile(ProfileUpdateModel model)
         {
             var userId = HttpContext.Session.GetString("UserId");
             if (string.IsNullOrEmpty(userId) || userId != model.UserId)
@@ -637,7 +638,7 @@ namespace MessangerWeb.Controllers
         }
 
         [HttpPost]
-        public IActionResult CreateGroup(CreateGroupModel model)
+        public async Task<IActionResult> CreateGroup(CreateGroupModel model)
         {
             var userEmail = HttpContext.Session.GetString("Email");
             var userName = HttpContext.Session.GetString("FirstName") + " " + HttpContext.Session.GetString("LastName");
@@ -730,7 +731,7 @@ namespace MessangerWeb.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetGroupMessages(int groupId)
+        public async Task<IActionResult> GetGroupMessages(int groupId)
         {
             var userEmail = HttpContext.Session.GetString("Email");
             if (string.IsNullOrEmpty(userEmail))
@@ -750,7 +751,7 @@ namespace MessangerWeb.Controllers
         }
 
         [HttpPost]
-        public IActionResult SendGroupMessage(int groupId, string messageText)
+        public async Task<IActionResult> SendGroupMessage(int groupId, string messageText)
         {
             var senderEmail = HttpContext.Session.GetString("Email");
 
@@ -788,7 +789,7 @@ namespace MessangerWeb.Controllers
         }
 
         [HttpPost]
-        public IActionResult SendGroupFile(IFormFile file, int groupId)
+        public async Task<IActionResult> SendGroupFile(IFormFile file, int groupId)
         {
             var senderEmail = HttpContext.Session.GetString("Email");
 
@@ -854,7 +855,7 @@ namespace MessangerWeb.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetUnreadMessagesCount()
+        public async Task<IActionResult> GetUnreadMessagesCount()
         {
             try
             {
@@ -954,7 +955,7 @@ namespace MessangerWeb.Controllers
             return unreadCounts;
         }
 
-        private List<GroupInfo> GetUserGroups(string userEmail)
+        private async Task<List<GroupInfo>> GetUserGroups(string userEmail)
         {
             var groups = new List<GroupInfo>();
 
@@ -1103,7 +1104,7 @@ namespace MessangerWeb.Controllers
         }
 
         [HttpPost]
-        public IActionResult MarkGroupMessagesAsRead(int groupId)
+        public async Task<IActionResult> MarkGroupMessagesAsRead(int groupId)
         {
             try
             {
@@ -1261,7 +1262,7 @@ namespace MessangerWeb.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetGroupMembers(int groupId)
+        public async Task<IActionResult> GetGroupMembers(int groupId)
         {
             var userEmail = HttpContext.Session.GetString("Email");
             if (string.IsNullOrEmpty(userEmail))
@@ -1339,7 +1340,7 @@ namespace MessangerWeb.Controllers
         }
 
         [HttpPost]
-        public IActionResult RemoveMemberFromGroup(int groupId, string memberEmail)
+        public async Task<IActionResult> RemoveMemberFromGroup(int groupId, string memberEmail)
         {
             var userEmail = HttpContext.Session.GetString("Email");
             if (string.IsNullOrEmpty(userEmail))
@@ -1394,7 +1395,7 @@ namespace MessangerWeb.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetAvailableMembers(int groupId)
+        public async Task<IActionResult> GetAvailableMembers(int groupId)
         {
             var userEmail = HttpContext.Session.GetString("Email");
             if (string.IsNullOrEmpty(userEmail))
@@ -1460,7 +1461,7 @@ namespace MessangerWeb.Controllers
         }
 
         [HttpPost]
-        public IActionResult AddMembersToGroup([FromBody] AddMembersModel model)
+        public async Task<IActionResult> AddMembersToGroup([FromBody] AddMembersModel model)
         {
             var userEmail = HttpContext.Session.GetString("Email");
             if (string.IsNullOrEmpty(userEmail))
@@ -1515,7 +1516,7 @@ namespace MessangerWeb.Controllers
         }
 
         [HttpPost]
-        public IActionResult UpdateGroup([FromForm] UpdateGroupModel model)
+        public async Task<IActionResult> UpdateGroup([FromForm] UpdateGroupModel model)
         {
             var userEmail = HttpContext.Session.GetString("Email");
             if (string.IsNullOrEmpty(userEmail))
@@ -1616,7 +1617,7 @@ namespace MessangerWeb.Controllers
             }
         }
 
-        private List<UserInfo> GetAllUsersWithLastMessage(string currentUserId, string currentUserEmail)
+        private async Task<List<UserInfo>> GetAllUsersWithLastMessage(string currentUserId, string currentUserEmail)
         {
             var users = new List<UserInfo>();
 
