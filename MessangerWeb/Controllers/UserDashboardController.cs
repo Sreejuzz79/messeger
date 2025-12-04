@@ -72,10 +72,10 @@ namespace MessangerWeb.Controllers
 
             if (!string.IsNullOrEmpty(selectedUserId))
             {
-                model.SelectedUser = GetUserById(selectedUserId);
+                model.SelectedUser = await GetUserById(selectedUserId);
                 if (model.SelectedUser != null)
                 {
-                    model.Messages = GetMessages(userEmail, model.SelectedUser.Email);
+                    model.Messages = await GetMessages(userEmail, model.SelectedUser.Email);
                     model.CurrentViewType = "user";
                     // Mark messages as read immediately when chat is opened
                     MarkMessagesAsRead(userEmail, model.SelectedUser.Email);
@@ -628,7 +628,7 @@ namespace MessangerWeb.Controllers
 
             try
             {
-                var groups = GetUserGroups(userEmail);
+                var groups = await GetUserGroups(userEmail);
                 return Json(new { success = true, groups = groups });
             }
             catch (Exception ex)
