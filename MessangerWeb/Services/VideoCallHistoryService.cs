@@ -1,9 +1,9 @@
-﻿// Services/VideoCallHistoryService.cs
+// Services/VideoCallHistoryService.cs
 using System.Data;
 using MessangerWeb.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using MySql.Data.MySqlClient;
+using Npgsql;
 using MessangerWeb.Models;
 
 namespace WebsiteApplication.Services
@@ -22,11 +22,11 @@ namespace WebsiteApplication.Services
 
     public class VideoCallHistoryService : IVideoCallHistoryService
     {
-        private readonly MySqlConnectionService _connectionService;
+        private readonly PostgreSqlConnectionService _connectionService;
         private readonly ILogger<VideoCallHistoryService> _logger;
         private readonly string _connectionString;
 
-        public VideoCallHistoryService(MySqlConnectionService connectionService, ILogger<VideoCallHistoryService> logger, IConfiguration configuration)
+        public VideoCallHistoryService(PostgreSqlConnectionService connectionService, ILogger<VideoCallHistoryService> logger, IConfiguration configuration)
         {
             _connectionService = connectionService;
             _logger = logger;
@@ -46,7 +46,7 @@ namespace WebsiteApplication.Services
                     VALUES 
                     (@CallId, @CallerId, @ReceiverId, @ReceiverType, @CallType, @CallStatus, @StartTime, @ParticipantsCount)";
 
-                using var command = new MySqlCommand(query, connection);
+                using var command = new NpgsqlCommand(query, connection);
                 command.Parameters.AddWithValue("@CallId", callId);
                 command.Parameters.AddWithValue("@CallerId", callerId);
                 command.Parameters.AddWithValue("@ReceiverId", receiverId);
@@ -80,7 +80,7 @@ namespace WebsiteApplication.Services
                         Duration = CASE WHEN @CallStatus IN ('Completed', 'Failed') THEN TIMESTAMPDIFF(SECOND, StartTime, @EndTime) ELSE Duration END
                     WHERE CallId = @CallId";
 
-                using var command = new MySqlCommand(query, connection);
+                using var command = new NpgsqlCommand(query, connection);
                 command.Parameters.AddWithValue("@CallId", callId);
                 command.Parameters.AddWithValue("@CallStatus", status);
                 command.Parameters.AddWithValue("@EndTime", DateTime.UtcNow);
@@ -113,7 +113,7 @@ namespace WebsiteApplication.Services
                         EndTime = CASE WHEN Duration IS NULL THEN @EndTime ELSE EndTime END
                     WHERE CallId = @CallId";
 
-                using var command = new MySqlCommand(query, connection);
+                using var command = new NpgsqlCommand(query, connection);
                 command.Parameters.AddWithValue("@CallId", callId);
                 command.Parameters.AddWithValue("@Duration", duration);
                 command.Parameters.AddWithValue("@EndTime", DateTime.UtcNow);
@@ -142,7 +142,7 @@ namespace WebsiteApplication.Services
                         EndTime = @EndTime
                     WHERE CallId = @CallId";
 
-                using var command = new MySqlCommand(query, connection);
+                using var command = new NpgsqlCommand(query, connection);
                 command.Parameters.AddWithValue("@CallId", callId);
                 command.Parameters.AddWithValue("@CallStatus", status);
                 command.Parameters.AddWithValue("@Duration", duration);
@@ -178,7 +178,7 @@ namespace WebsiteApplication.Services
                     WHERE vch.CallerId = @UserId OR vch.ReceiverId = @UserId
                     ORDER BY vch.StartTime DESC";
 
-                using var command = new MySqlCommand(query, connection);
+                using var command = new NpgsqlCommand(query, connection);
                 command.Parameters.AddWithValue("@UserId", userId);
 
                 using var reader = await command.ExecuteReaderAsync();
@@ -225,7 +225,7 @@ namespace WebsiteApplication.Services
                     LEFT JOIN students receiver ON vch.ReceiverId = receiver.id
                     WHERE vch.CallId = @CallId";
 
-                using var command = new MySqlCommand(query, connection);
+                using var command = new NpgsqlCommand(query, connection);
                 command.Parameters.AddWithValue("@CallId", callId);
 
                 using var reader = await command.ExecuteReaderAsync();
@@ -264,7 +264,7 @@ namespace WebsiteApplication.Services
                 using var connection = await _connectionService.GetConnectionAsync();
                 var query = "UPDATE VideoCallHistory SET ParticipantsCount = @ParticipantsCount WHERE CallId = @CallId";
 
-                using var command = new MySqlCommand(query, connection);
+                using var command = new NpgsqlCommand(query, connection);
                 command.Parameters.AddWithValue("@CallId", callId);
                 command.Parameters.AddWithValue("@ParticipantsCount", participantsCount);
 

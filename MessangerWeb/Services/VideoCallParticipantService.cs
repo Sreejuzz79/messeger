@@ -1,8 +1,8 @@
-﻿using System.Data;
+using System.Data;
 using System.Text.Json;
 using MessangerWeb.Services;
 using Microsoft.Extensions.Logging;
-using MySql.Data.MySqlClient;
+using Npgsql;
 
 namespace MessangerWeb.Services
 {
@@ -18,10 +18,10 @@ namespace MessangerWeb.Services
 
     public class VideoCallParticipantService : IVideoCallParticipantService
     {
-        private readonly MySqlConnectionService _connectionService;
+        private readonly PostgreSqlConnectionService _connectionService;
         private readonly ILogger<VideoCallParticipantService> _logger;
 
-        public VideoCallParticipantService(MySqlConnectionService connectionService, ILogger<VideoCallParticipantService> logger)
+        public VideoCallParticipantService(PostgreSqlConnectionService connectionService, ILogger<VideoCallParticipantService> logger)
         {
             _connectionService = connectionService;
             _logger = logger;
@@ -38,7 +38,7 @@ namespace MessangerWeb.Services
                     VALUES 
                     (@ParticipantId, @CallId, @UserId, @Status, NOW())";
 
-                using var command = new MySqlCommand(query, connection);
+                using var command = new NpgsqlCommand(query, connection);
                 command.Parameters.AddWithValue("@ParticipantId", Guid.NewGuid().ToString());
                 command.Parameters.AddWithValue("@CallId", callId);
                 command.Parameters.AddWithValue("@UserId", userId);
@@ -85,7 +85,7 @@ namespace MessangerWeb.Services
                         WHERE CallId = @CallId AND UserId = @UserId";
                 }
 
-                using var command = new MySqlCommand(query, connection);
+                using var command = new NpgsqlCommand(query, connection);
                 command.Parameters.AddWithValue("@CallId", callId);
                 command.Parameters.AddWithValue("@UserId", userId);
                 command.Parameters.AddWithValue("@Status", status);
@@ -116,7 +116,7 @@ namespace MessangerWeb.Services
                     SET Duration = @Duration 
                     WHERE CallId = @CallId AND UserId = @UserId";
 
-                using var command = new MySqlCommand(query, connection);
+                using var command = new NpgsqlCommand(query, connection);
                 command.Parameters.AddWithValue("@CallId", callId);
                 command.Parameters.AddWithValue("@UserId", userId);
                 command.Parameters.AddWithValue("@Duration", duration);
@@ -145,7 +145,7 @@ namespace MessangerWeb.Services
                     WHERE vcp.CallId = @CallId
                     ORDER BY vcp.CreatedAt ASC";
 
-                using var command = new MySqlCommand(query, connection);
+                using var command = new NpgsqlCommand(query, connection);
                 command.Parameters.AddWithValue("@CallId", callId);
 
                 using var reader = await command.ExecuteReaderAsync();
@@ -198,7 +198,7 @@ namespace MessangerWeb.Services
 
                 VideoCallDetails callDetails = null;
 
-                using (var command = new MySqlCommand(callQuery, connection))
+                using (var command = new NpgsqlCommand(callQuery, connection))
                 {
                     command.Parameters.AddWithValue("@CallId", callId);
 
@@ -242,7 +242,7 @@ namespace MessangerWeb.Services
                     else
                     {
                         var receiverQuery = "SELECT firstname, lastname FROM students WHERE id = @ReceiverId";
-                        using var command = new MySqlCommand(receiverQuery, connection);
+                        using var command = new NpgsqlCommand(receiverQuery, connection);
                         command.Parameters.AddWithValue("@ReceiverId", callDetails.ReceiverId);
 
                         using var reader = await command.ExecuteReaderAsync();
@@ -285,7 +285,7 @@ namespace MessangerWeb.Services
 
                 var callIds = new List<string>();
 
-                using (var command = new MySqlCommand(query, connection))
+                using (var command = new NpgsqlCommand(query, connection))
                 {
                     command.Parameters.AddWithValue("@UserId", userId);
 

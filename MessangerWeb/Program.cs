@@ -2,6 +2,7 @@ using System;
 using MessangerWeb.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -14,6 +15,14 @@ namespace WebsiteApplication
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+
+            // Configure forwarded headers for reverse proxy (Render)
+            builder.Services.Configure<ForwardedHeadersOptions>(options =>
+            {
+                options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+                options.KnownNetworks.Clear();
+                options.KnownProxies.Clear();
+            });
 
             // Add services to the container.
             builder.Services.AddControllersWithViews();
@@ -52,7 +61,7 @@ namespace WebsiteApplication
             builder.Services.AddLogging();
 
             // Add your custom services
-            builder.Services.AddScoped<MySqlConnectionService>();
+            builder.Services.AddScoped<PostgreSqlConnectionService>();
             builder.Services.AddScoped<IVideoCallHistoryService, VideoCallHistoryService>();
             builder.Services.AddScoped<IVideoCallParticipantService, VideoCallParticipantService>();
 
@@ -65,18 +74,22 @@ namespace WebsiteApplication
 
             var app = builder.Build();
 
+            // Use forwarded headers from reverse proxy
+            app.UseForwardedHeaders();
+
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
+                app.UseHttpsRedirection(); // Only redirect in development
             }
             else
             {
                 app.UseExceptionHandler("/Home/Error");
                 app.UseHsts();
+                // Don't use HTTPS redirection in production - Render handles SSL at load balancer
             }
 
-            app.UseHttpsRedirection();
             app.UseStaticFiles();
 
 
