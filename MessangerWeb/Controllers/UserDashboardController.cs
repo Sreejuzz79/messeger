@@ -316,17 +316,6 @@ namespace MessangerWeb.Controllers
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = ex.Message });
-            }
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> GetMessages(string otherUserId)
-        {
-            var currentUserId = HttpContext.Session.GetString("UserId");
-            var currentUserEmail = HttpContext.Session.GetString("Email");
-
-            if (string.IsNullOrEmpty(currentUserId) || string.IsNullOrEmpty(otherUserId))
             {
                 return Json(new { success = false, message = "Invalid user data" });
             }
@@ -524,7 +513,7 @@ namespace MessangerWeb.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetCurrentUserProfile()
+        public async Task<IActionResult> GetCurrentUserProfile()
         {
             var userId = HttpContext.Session.GetString("UserId");
             if (string.IsNullOrEmpty(userId))
@@ -618,7 +607,7 @@ namespace MessangerWeb.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetGroups()
+        public async Task<IActionResult> GetGroups()
         {
             var userEmail = HttpContext.Session.GetString("Email");
             if (string.IsNullOrEmpty(userEmail))
