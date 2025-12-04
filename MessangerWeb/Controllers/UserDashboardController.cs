@@ -18,7 +18,7 @@ namespace MessangerWeb.Controllers
 {
     public class UserDashboardController : Controller
     {
-        private readonly string connectionString;
+        private readonly PostgreSqlConnectionService _dbService;
         private readonly string fileUploadPath = "wwwroot/uploads/chatfiles/";
         private readonly IVideoCallHistoryService _videoCallHistoryService;
         private readonly ILogger<UserDashboardController> _logger;
@@ -33,7 +33,7 @@ namespace MessangerWeb.Controllers
             _videoCallHistoryService = videoCallHistoryService;
             _videoCallParticipantService = videoCallParticipantService;
             _logger = logger;
-            connectionString = configuration.GetConnectionString("DefaultConnection");
+            _dbService = dbService;
         }
 
         public IActionResult Index(string selectedUserId = null, int? selectedGroupId = null)
@@ -114,7 +114,7 @@ namespace MessangerWeb.Controllers
                     return Json(new { success = false, message = "Receiver not found" });
                 }
 
-                using (var connection = new NpgsqlConnection(connectionString))
+                using (var connection = await _dbService.GetConnectionAsync())
                 {
                     connection.Open();
                     var query = @"INSERT INTO messages (sender_email, receiver_email, message, sent_at, is_read) 
@@ -283,7 +283,7 @@ namespace MessangerWeb.Controllers
                 var imageExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp" };
                 var isImage = imageExtensions.Contains(Path.GetExtension(file.FileName).ToLower());
 
-                using (var connection = new NpgsqlConnection(connectionString))
+                using (var connection = await _dbService.GetConnectionAsync())
                 {
                     connection.Open();
                     string query;
@@ -346,7 +346,7 @@ namespace MessangerWeb.Controllers
 
             try
             {
-                using (var connection = new NpgsqlConnection(connectionString))
+                using (var connection = await _dbService.GetConnectionAsync())
                 {
                     connection.Open();
                     var query = @"SELECT m.*, 
@@ -406,7 +406,7 @@ namespace MessangerWeb.Controllers
         {
             try
             {
-                using (var connection = new NpgsqlConnection(connectionString))
+                using (var connection = await _dbService.GetConnectionAsync())
                 {
                     connection.Open();
                     var query = "SELECT id, firstname, lastname, email, photo FROM students WHERE id = @UserId";
@@ -453,7 +453,7 @@ namespace MessangerWeb.Controllers
 
             try
             {
-                using (var connection = new NpgsqlConnection(connectionString))
+                using (var connection = await _dbService.GetConnectionAsync())
                 {
                     connection.Open();
                     string query = "SELECT id, firstname, lastname, email, status, photo FROM students WHERE status = 'Active' AND id != @CurrentUserId";
@@ -503,7 +503,7 @@ namespace MessangerWeb.Controllers
         {
             try
             {
-                using (var connection = new NpgsqlConnection(connectionString))
+                using (var connection = await _dbService.GetConnectionAsync())
                 {
                     connection.Open();
                     var query = "SELECT COUNT(*) FROM students WHERE id = @UserId AND status = 'Active'";
@@ -564,7 +564,7 @@ namespace MessangerWeb.Controllers
 
             try
             {
-                using (var connection = new NpgsqlConnection(connectionString))
+                using (var connection = await _dbService.GetConnectionAsync())
                 {
                     connection.Open();
 
@@ -654,7 +654,7 @@ namespace MessangerWeb.Controllers
 
             try
             {
-                using (var connection = new NpgsqlConnection(connectionString))
+                using (var connection = await _dbService.GetConnectionAsync())
                 {
                     connection.Open();
 
@@ -761,7 +761,7 @@ namespace MessangerWeb.Controllers
 
             try
             {
-                using (var connection = new NpgsqlConnection(connectionString))
+                using (var connection = await _dbService.GetConnectionAsync())
                 {
                     connection.Open();
 
@@ -816,7 +816,7 @@ namespace MessangerWeb.Controllers
                 var imageExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp" };
                 var isImage = imageExtensions.Contains(Path.GetExtension(file.FileName).ToLower());
 
-                using (var connection = new NpgsqlConnection(connectionString))
+                using (var connection = await _dbService.GetConnectionAsync())
                 {
                     connection.Open();
                     string query;
@@ -880,7 +880,7 @@ namespace MessangerWeb.Controllers
 
             try
             {
-                using (var connection = new NpgsqlConnection(connectionString))
+                using (var connection = await _dbService.GetConnectionAsync())
                 {
                     connection.Open();
 
@@ -960,7 +960,7 @@ namespace MessangerWeb.Controllers
 
             try
             {
-                using (var connection = new NpgsqlConnection(connectionString))
+                using (var connection = await _dbService.GetConnectionAsync())
                 {
                     connection.Open();
                     var query = @"SELECT g.*, 
@@ -1014,7 +1014,7 @@ namespace MessangerWeb.Controllers
 
             try
             {
-                using (var connection = new NpgsqlConnection(connectionString))
+                using (var connection = await _dbService.GetConnectionAsync())
                 {
                     connection.Open();
                     EnsureGroupMessageReadStatusTableExists(connection);
@@ -1135,7 +1135,7 @@ namespace MessangerWeb.Controllers
         {
             try
             {
-                using (var connection = new NpgsqlConnection(connectionString))
+                using (var connection = await _dbService.GetConnectionAsync())
                 {
                     connection.Open();
 
@@ -1167,7 +1167,7 @@ namespace MessangerWeb.Controllers
         {
             try
             {
-                using (var connection = new NpgsqlConnection(connectionString))
+                using (var connection = await _dbService.GetConnectionAsync())
                 {
                     connection.Open();
 
@@ -1274,7 +1274,7 @@ namespace MessangerWeb.Controllers
                 var members = new List<object>();
                 string groupCreator = "";
 
-                using (var connection = new NpgsqlConnection(connectionString))
+                using (var connection = await _dbService.GetConnectionAsync())
                 {
                     connection.Open();
 
@@ -1349,7 +1349,7 @@ namespace MessangerWeb.Controllers
 
             try
             {
-                using (var connection = new NpgsqlConnection(connectionString))
+                using (var connection = await _dbService.GetConnectionAsync())
                 {
                     connection.Open();
 
@@ -1406,7 +1406,7 @@ namespace MessangerWeb.Controllers
             {
                 var availableMembers = new List<object>();
 
-                using (var connection = new NpgsqlConnection(connectionString))
+                using (var connection = await _dbService.GetConnectionAsync())
                 {
                     connection.Open();
 
@@ -1475,7 +1475,7 @@ namespace MessangerWeb.Controllers
 
             try
             {
-                using (var connection = new NpgsqlConnection(connectionString))
+                using (var connection = await _dbService.GetConnectionAsync())
                 {
                     connection.Open();
 
@@ -1525,7 +1525,7 @@ namespace MessangerWeb.Controllers
 
             try
             {
-                using (var connection = new NpgsqlConnection(connectionString))
+                using (var connection = await _dbService.GetConnectionAsync())
                 {
                     connection.Open();
 
@@ -1622,7 +1622,7 @@ namespace MessangerWeb.Controllers
 
             try
             {
-                using (var connection = new NpgsqlConnection(connectionString))
+                using (var connection = await _dbService.GetConnectionAsync())
                 {
                     connection.Open();
 
@@ -1806,7 +1806,7 @@ namespace MessangerWeb.Controllers
 
         private async Task SaveIndividualCallDurationMessage(SaveCallDurationRequest request, string userEmail)
         {
-            using (var connection = new NpgsqlConnection(connectionString))
+            using (var connection = await _dbService.GetConnectionAsync())
             {
                 await connection.OpenAsync();
 
@@ -1837,7 +1837,7 @@ namespace MessangerWeb.Controllers
 
         private async Task<string> GetUserEmailById(string userId)
         {
-            using (var connection = new NpgsqlConnection(connectionString))
+            using (var connection = await _dbService.GetConnectionAsync())
             {
                 await connection.OpenAsync();
 
@@ -1854,7 +1854,7 @@ namespace MessangerWeb.Controllers
 
         private async Task SaveGroupCallDurationMessage(SaveCallDurationRequest request, string userEmail, string userName)
         {
-            using (var connection = new NpgsqlConnection(connectionString))
+            using (var connection = await _dbService.GetConnectionAsync())
             {
                 await connection.OpenAsync();
 

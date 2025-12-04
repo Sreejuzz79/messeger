@@ -2,6 +2,7 @@ using System;
 using MessangerWeb.Models;
 using Microsoft.AspNetCore.Mvc;
 using Npgsql;
+using MessangerWeb.Services;
 using Microsoft.Extensions.Configuration;
 
 namespace MessangerWeb.Controllers
@@ -10,11 +11,11 @@ namespace MessangerWeb.Controllers
     {
         private const string AdminEmail = "admin";
         private const string AdminPassword = "123";
-        private readonly string connectionString;
+        private readonly PostgreSqlConnectionService _dbService;
 
-        public AccountController(IConfiguration configuration)
+        public AccountController(PostgreSqlConnectionService dbService)
         {
-            connectionString = configuration.GetConnectionString("DefaultConnection");
+            _dbService = dbService;
         }
 
         [HttpGet]
@@ -53,7 +54,7 @@ namespace MessangerWeb.Controllers
         }
 
         [HttpPost]
-        public IActionResult UserLogin(string Email, string Password)
+        public async Task<IActionResult> UserLogin(string Email, string Password)
         {
             ViewBag.Email = Email;
 
@@ -71,15 +72,15 @@ namespace MessangerWeb.Controllers
 
             try
             {
-                if (!TestDatabaseConnection())
+                if (!(await TestDatabaseConnection()))
                 {
                     ViewBag.ErrorMessage = "Database connection failed. Please contact administrator.";
                     return View();
                 }
 
-                using (var connection = new NpgsqlConnection(connectionString))
+                using (var connection = await _dbService.GetConnectionAsync())
                 {
-                    connection.Open();
+                    await connection.OpenAsync();
 
                     string query = @"SELECT id, email, firstname, lastname, status 
                                      FROM students 
@@ -92,7 +93,7 @@ namespace MessangerWeb.Controllers
                         command.Parameters.AddWithValue("@Email", Email);
                         command.Parameters.AddWithValue("@Password", Password);
 
-                        using (var reader = command.ExecuteReader())
+                        using (var reader = await command.ExecuteReaderAsync())
                         {
                             if (reader.Read())
                             {
@@ -111,7 +112,7 @@ namespace MessangerWeb.Controllers
                             }
                             else
                             {
-                                bool isInactive = CheckIfUserIsInactive(Email, Password);
+                                bool isInactive = await CheckIfUserIsInactive(Email, Password);
 
                                 if (isInactive)
                                 {
@@ -141,13 +142,13 @@ namespace MessangerWeb.Controllers
         }
 
         // ================= HELPER METHODS =================
-        private bool TestDatabaseConnection()
+        private async Task<bool> TestDatabaseConnection()
         {
             try
             {
-                using (var connection = new NpgsqlConnection(connectionString))
+                using (var connection = await _dbService.GetConnectionAsync())
                 {
-                    connection.Open();
+                    await connection.OpenAsync();
                     return true;
                 }
             }
@@ -157,13 +158,13 @@ namespace MessangerWeb.Controllers
             }
         }
 
-        private bool CheckIfUserIsInactive(string email, string password)
+        private async Task<bool> CheckIfUserIsInactive(string email, string password)
         {
             try
             {
-                using (var connection = new NpgsqlConnection(connectionString))
+                using (var connection = await _dbService.GetConnectionAsync())
                 {
-                    connection.Open();
+                    await connection.OpenAsync();
 
                     string query = @"SELECT COUNT(*) 
                                      FROM students 

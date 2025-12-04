@@ -2,17 +2,18 @@ using System.Data;
 using MessangerWeb.Models;
 using Microsoft.AspNetCore.Mvc;
 using Npgsql;
+using MessangerWeb.Services;
 using Microsoft.Extensions.Configuration;
 
 namespace MessangerWeb.Controllers
 {
     public class StudentController : Controller
     {
-        private readonly string connectionString;
+        private readonly PostgreSqlConnectionService _dbService;
 
-        public StudentController(IConfiguration configuration)
+        public StudentController(PostgreSqlConnectionService dbService)
         {
-            connectionString = configuration.GetConnectionString("DefaultConnection");
+            _dbService = dbService;
         }
 
         // GET: /Student/Add
@@ -80,7 +81,7 @@ namespace MessangerWeb.Controllers
 
             try
             {
-                using (var con = new NpgsqlConnection(connectionString))
+                using (var con = await _dbService.GetConnectionAsync())
                 {
                     await con.OpenAsync();
                     Console.WriteLine("Database connection opened successfully");
@@ -152,7 +153,7 @@ namespace MessangerWeb.Controllers
 
             try
             {
-                using (var con = new NpgsqlConnection(connectionString))
+                using (var con = await _dbService.GetConnectionAsync())
                 {
                     await con.OpenAsync();
                     string query = "SELECT * FROM students";
@@ -195,7 +196,7 @@ namespace MessangerWeb.Controllers
 
             try
             {
-                using (var con = new NpgsqlConnection(connectionString))
+                using (var con = await _dbService.GetConnectionAsync())
                 {
                     await con.OpenAsync();
                     string query = @"SELECT * FROM students WHERE id = @id";
@@ -254,7 +255,7 @@ namespace MessangerWeb.Controllers
 
             try
             {
-                using (var con = new NpgsqlConnection(connectionString))
+                using (var con = await _dbService.GetConnectionAsync())
                 {
                     await con.OpenAsync();
                     string query = @"SELECT * FROM students WHERE id=@id";
@@ -350,7 +351,7 @@ namespace MessangerWeb.Controllers
 
             try
             {
-                using (var con = new NpgsqlConnection(connectionString))
+                using (var con = await _dbService.GetConnectionAsync())
                 {
                     await con.OpenAsync();
                     string query = @"
@@ -404,7 +405,7 @@ namespace MessangerWeb.Controllers
             {
                 Student student = null;
 
-                using (var con = new NpgsqlConnection(connectionString))
+                using (var con = await _dbService.GetConnectionAsync())
                 {
                     await con.OpenAsync();
                     string query = @"SELECT * FROM students WHERE id = @id";
@@ -480,7 +481,7 @@ namespace MessangerWeb.Controllers
         // Helper method to get student by ID
         private async Task<Student> GetStudentById(int id)
         {
-            using (var con = new NpgsqlConnection(connectionString))
+            using (var con = await _dbService.GetConnectionAsync())
             {
                 await con.OpenAsync();
                 string query = @"SELECT password, photo FROM students WHERE id=@id";
