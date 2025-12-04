@@ -78,7 +78,7 @@ namespace MessangerWeb.Controllers
                     model.Messages = await GetMessages(userEmail, model.SelectedUser.Email);
                     model.CurrentViewType = "user";
                     // Mark messages as read immediately when chat is opened
-                    MarkMessagesAsRead(userEmail, model.SelectedUser.Email);
+                    await MarkMessagesAsRead(userEmail, model.SelectedUser.Email);
                 }
             }
             else if (selectedGroupId.HasValue)
@@ -86,10 +86,10 @@ namespace MessangerWeb.Controllers
                 model.SelectedGroup = model.Groups.FirstOrDefault(g => g.GroupId == selectedGroupId.Value);
                 if (model.SelectedGroup != null)
                 {
-                    model.GroupMessages = GetGroupMessagesByGroupId(selectedGroupId.Value, userEmail);
+                    model.GroupMessages = await GetGroupMessagesByGroupId(selectedGroupId.Value, userEmail);
                     model.CurrentViewType = "group";
                     // Mark group messages as read immediately when chat is opened - FOR CURRENT USER ONLY
-                    MarkGroupMessagesAsReadForUser(userEmail, selectedGroupId.Value);
+                    await MarkGroupMessagesAsReadForUser(userEmail, selectedGroupId.Value);
                 }
             }
 
@@ -316,6 +316,17 @@ namespace MessangerWeb.Controllers
             }
             catch (Exception ex)
             {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetMessages(string otherUserId)
+        {
+            var currentUserId = HttpContext.Session.GetString("UserId");
+            var currentUserEmail = HttpContext.Session.GetString("Email");
+
+            if (string.IsNullOrEmpty(currentUserId) || string.IsNullOrEmpty(otherUserId))
             {
                 return Json(new { success = false, message = "Invalid user data" });
             }
@@ -437,7 +448,7 @@ namespace MessangerWeb.Controllers
             return null;
         }
 
-        private async Task<List<UserInfo>> GetAllUsers(string currentUserId)
+        private List<UserInfo> GetAllUsers(string currentUserId)
         {
             var users = new List<UserInfo>();
 
@@ -489,7 +500,7 @@ namespace MessangerWeb.Controllers
             return users;
         }
 
-        private async Task<bool> IsUserActive(string userId)
+        private bool IsUserActive(string userId)
         {
             try
             {
@@ -864,7 +875,7 @@ namespace MessangerWeb.Controllers
             }
         }
 
-        private async Task<Dictionary<string, int>> GetUnreadMessagesCount(string userEmail)
+        private Dictionary<string, int> GetUnreadMessagesCount(string userEmail)
         {
             var unreadCounts = new Dictionary<string, int>();
 
@@ -993,6 +1004,172 @@ namespace MessangerWeb.Controllers
             catch (Exception ex)
             {
                 Console.WriteLine($"Error fetching groups: {ex.Message}");
+            }
+
+            return groups;
+        }
+
+        private List<GroupMessage> GetGroupMessagesByGroupId(int groupId, string currentUserEmail)
+        {
+            var messages = new List<GroupMessage>();
+
+            try
+            {
+                using (var connection = await _dbService.GetConnectionAsync())
+                {
+                    connection.Open();
+                    EnsureGroupMessageReadStatusTableExists(connection);
+
+                    var query = @"SELECT gm.*, 
+                         CONCAT(s.firstname, ' ', s.lastname) as sender_name,
+                         EXISTS (
+                             SELECT 1 FROM group_message_read_status gmrs 
+                             WHERE gmrs.group_message_id = gm.message_id 
+                             AND gmrs.user_email = @CurrentUserEmail
+                             AND gmrs.has_read = 1
+                         ) as is_read_by_current_user
+                         FROM group_messages gm
+                         LEFT JOIN students s ON gm.sender_email = s.email
+                         WHERE gm.group_id = @GroupId
+                         ORDER BY gm.sent_at ASC";
+
+                    using (var command = new NpgsqlCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@GroupId", groupId);
+                        command.Parameters.AddWithValue("@CurrentUserEmail", currentUserEmail);
+
+                        using (var reader = command.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                bool isReadByCurrentUser = Convert.ToBoolean(reader["is_read_by_current_user"]);
+
+                                messages.Add(new GroupMessage
+                                {
+                                    MessageId = Convert.ToInt32(reader["message_id"]),
+                                    GroupId = Convert.ToInt32(reader["group_id"]),
+                                    SenderEmail = reader["sender_email"].ToString(),
+                                    SenderName = reader["sender_name"].ToString(),
+                                    MessageText = reader["message"]?.ToString() ?? "",
+                                    MessageRtf = reader["message_rtf"]?.ToString(),
+                                    ImagePath = reader["image_path"]?.ToString(),
+                                    FilePath = reader["file_path"]?.ToString(),
+                                    FileOriginalName = reader["file_original_name"]?.ToString(),
+                                    SentAt = Convert.ToDateTime(reader["sent_at"]),
+                                    IsRead = isReadByCurrentUser,
+                                    IsCurrentUserSender = reader["sender_email"].ToString() == currentUserEmail,
+                                    // Add call message fields
+                                    IsCallMessage = reader["is_call_message"] != DBNull.Value && Convert.ToBoolean(reader["is_call_message"]),
+                                    CallDuration = reader["call_duration"]?.ToString(),
+                                    CallStatus = reader["call_status"]?.ToString()
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error fetching group messages: {ex.Message}");
+            }
+
+            return messages;
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> MarkMessagesAsRead(string otherUserId)
+        {
+            try
+            {
+                var userEmail = HttpContext.Session.GetString("Email");
+                if (string.IsNullOrEmpty(userEmail))
+                {
+                    return Json(new { success = false });
+                }
+
+                var otherUser = await GetUserById(otherUserId);
+                if (otherUser == null)
+                {
+                    return Json(new { success = false });
+                }
+
+                var result = await MarkMessagesAsRead(userEmail, otherUser.Email);
+                return Json(new { success = result });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error marking messages as read: {ex.Message}");
+                return Json(new { success = false });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> MarkGroupMessagesAsRead(int groupId)
+        {
+            try
+            {
+                var userEmail = HttpContext.Session.GetString("Email");
+                if (string.IsNullOrEmpty(userEmail))
+                {
+                    return Json(new { success = false });
+                }
+
+                var result = MarkGroupMessagesAsReadForUser(userEmail, groupId);
+
+                // Return updated unread counts
+                if (result)
+                {
+                    var unreadCounts = GetUnreadMessagesCount(userEmail);
+                    return Json(new { success = true, unreadMessages = unreadCounts });
+                }
+
+                return Json(new { success = false });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error marking group messages as read: {ex.Message}");
+                return Json(new { success = false });
+            }
+        }
+
+        private bool MarkMessagesAsRead(string userEmail, string otherUserEmail)
+        {
+            try
+            {
+                using (var connection = await _dbService.GetConnectionAsync())
+                {
+                    connection.Open();
+
+                    var query = @"
+                UPDATE messages 
+                SET is_read = 1 
+                WHERE receiver_email = @UserEmail 
+                AND sender_email = @OtherUserEmail 
+                AND is_read = 0";
+
+                    using (var command = new NpgsqlCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@UserEmail", userEmail);
+                        command.Parameters.AddWithValue("@OtherUserEmail", otherUserEmail);
+
+                        int rowsAffected = command.ExecuteNonQuery();
+                        return rowsAffected >= 0;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in MarkMessagesAsRead: {ex.Message}");
+                return false;
+            }
+        }
+
+        private bool MarkGroupMessagesAsReadForUser(string userEmail, int groupId)
+        {
+            try
+            {
+                using (var connection = await _dbService.GetConnectionAsync())
+                {
                     connection.Open();
 
                     // First, ensure the group_message_read_status table exists
