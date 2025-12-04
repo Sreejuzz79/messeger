@@ -108,7 +108,7 @@ namespace MessangerWeb.Controllers
                         cmd.Parameters.AddWithValue("@city", model.City ?? string.Empty);
                         cmd.Parameters.AddWithValue("@address", model.Address ?? string.Empty);
                         cmd.Parameters.AddWithValue("@password", model.Password ?? string.Empty);
-                        cmd.Parameters.Add("@photo", NpgsqlDbType.LongBlob).Value = (object)model.Photo ?? DBNull.Value;
+                        cmd.Parameters.Add("@photo", NpgsqlTypes.NpgsqlDbType.Bytea).Value = (object)model.Photo ?? DBNull.Value;
 
                         Console.WriteLine("Executing SQL command...");
                         int rowsAffected = await cmd.ExecuteNonQueryAsync();
@@ -379,7 +379,7 @@ namespace MessangerWeb.Controllers
                         cmd.Parameters.AddWithValue("@City", model.City ?? "");
                         cmd.Parameters.AddWithValue("@Address", model.Address ?? "");
                         cmd.Parameters.AddWithValue("@Password", model.Password ?? ""); // Save as plain text
-                        cmd.Parameters.Add("@Photo", NpgsqlDbType.LongBlob).Value = (object)model.Photo ?? DBNull.Value;
+                        cmd.Parameters.Add("@Photo", NpgsqlTypes.NpgsqlDbType.Bytea).Value = (object)model.Photo ?? DBNull.Value;
 
                         await cmd.ExecuteNonQueryAsync();
                     }
