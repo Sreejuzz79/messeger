@@ -78,7 +78,7 @@ namespace MessangerWeb.Controllers
                     model.Messages = await GetMessages(userEmail, model.SelectedUser.Email);
                     model.CurrentViewType = "user";
                     // Mark messages as read immediately when chat is opened
-                    await MarkMessagesAsRead(userEmail, model.SelectedUser.Email);
+                    MarkMessagesAsRead(userEmail, model.SelectedUser.Email);
                 }
             }
             else if (selectedGroupId.HasValue)
@@ -86,10 +86,10 @@ namespace MessangerWeb.Controllers
                 model.SelectedGroup = model.Groups.FirstOrDefault(g => g.GroupId == selectedGroupId.Value);
                 if (model.SelectedGroup != null)
                 {
-                    model.GroupMessages = await GetGroupMessagesByGroupId(selectedGroupId.Value, userEmail);
+                    model.GroupMessages = GetGroupMessagesByGroupId(selectedGroupId.Value, userEmail);
                     model.CurrentViewType = "group";
                     // Mark group messages as read immediately when chat is opened - FOR CURRENT USER ONLY
-                    await MarkGroupMessagesAsReadForUser(userEmail, selectedGroupId.Value);
+                    MarkGroupMessagesAsReadForUser(userEmail, selectedGroupId.Value);
                 }
             }
 
@@ -448,7 +448,7 @@ namespace MessangerWeb.Controllers
             return null;
         }
 
-        private List<UserInfo> GetAllUsers(string currentUserId)
+        private async Task<List<UserInfo>> GetAllUsers(string currentUserId)
         {
             var users = new List<UserInfo>();
 
@@ -500,7 +500,7 @@ namespace MessangerWeb.Controllers
             return users;
         }
 
-        private bool IsUserActive(string userId)
+        private async Task<bool> IsUserActive(string userId)
         {
             try
             {
@@ -875,7 +875,7 @@ namespace MessangerWeb.Controllers
             }
         }
 
-        private Dictionary<string, int> GetUnreadMessagesCount(string userEmail)
+        private async Task<Dictionary<string, int>> GetUnreadMessagesCount(string userEmail)
         {
             var unreadCounts = new Dictionary<string, int>();
 
@@ -1009,7 +1009,7 @@ namespace MessangerWeb.Controllers
             return groups;
         }
 
-        private List<GroupMessage> GetGroupMessagesByGroupId(int groupId, string currentUserEmail)
+        private async Task<List<GroupMessage>> GetGroupMessagesByGroupId(int groupId, string currentUserEmail)
         {
             var messages = new List<GroupMessage>();
 
@@ -1132,7 +1132,7 @@ namespace MessangerWeb.Controllers
             }
         }
 
-        private bool MarkMessagesAsRead(string userEmail, string otherUserEmail)
+        private async Task<bool> MarkMessagesAsRead(string userEmail, string otherUserEmail)
         {
             try
             {
@@ -1164,7 +1164,7 @@ namespace MessangerWeb.Controllers
             }
         }
 
-        private bool MarkGroupMessagesAsReadForUser(string userEmail, int groupId)
+        private async Task<bool> MarkGroupMessagesAsReadForUser(string userEmail, int groupId)
         {
             try
             {
