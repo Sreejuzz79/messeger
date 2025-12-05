@@ -49,7 +49,7 @@ namespace MessangerWeb.Controllers
                 return RedirectToAction("UserLogin", "Account");
             }
 
-            if (!IsUserActive(userId))
+            if (!await IsUserActive(userId))
             {
                 HttpContext.Session.Clear();
                 TempData["ErrorMessage"] = "Your account has been deactivated.";
@@ -86,7 +86,7 @@ namespace MessangerWeb.Controllers
                 model.SelectedGroup = model.Groups.FirstOrDefault(g => g.GroupId == selectedGroupId.Value);
                 if (model.SelectedGroup != null)
                 {
-                    model.GroupMessages = GetGroupMessagesByGroupId(selectedGroupId.Value, userEmail);
+                    model.GroupMessages = await GetGroupMessagesByGroupId(selectedGroupId.Value, userEmail);
                     model.CurrentViewType = "group";
                     // Mark group messages as read immediately when chat is opened - FOR CURRENT USER ONLY
                     MarkGroupMessagesAsReadForUser(userEmail, selectedGroupId.Value);
