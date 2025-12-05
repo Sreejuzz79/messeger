@@ -11,8 +11,17 @@ namespace MessangerWeb.Services
         
         public PostgreSqlConnectionService(IConfiguration configuration)
         {
-            var rawConnectionString = configuration.GetConnectionString("DefaultConnection");
+            // First try environment variable (for Render deployment)
+            var envConnectionString = Environment.GetEnvironmentVariable("DATABASE_URL");
             
+            // Then try appsettings.json
+            var configConnectionString = configuration.GetConnectionString("DefaultConnection");
+            
+            var rawConnectionString = !string.IsNullOrWhiteSpace(envConnectionString) 
+                ? envConnectionString 
+                : configConnectionString;
+            
+            Console.WriteLine($"[PostgreSqlConnectionService] Using connection string source: {(!string.IsNullOrWhiteSpace(envConnectionString) ? "DATABASE_URL env var" : "appsettings.json")}");
             Console.WriteLine($"[PostgreSqlConnectionService] Raw connection string: '{rawConnectionString}'");
             
             // Convert Render's postgres:// URL format to Npgsql format if needed
