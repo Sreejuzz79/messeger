@@ -1114,12 +1114,12 @@ namespace MessangerWeb.Controllers
                     return Json(new { success = false });
                 }
 
-                var result = MarkGroupMessagesAsReadForUser(userEmail, groupId);
+                var result = await MarkGroupMessagesAsReadForUser(userEmail, groupId);
 
                 // Return updated unread counts
                 if (result)
                 {
-                    var unreadCounts = GetUnreadMessagesCount(userEmail);
+                    var unreadCounts = await GetUnreadMessagesCount(userEmail);
                     return Json(new { success = true, unreadMessages = unreadCounts });
                 }
 
@@ -1686,7 +1686,7 @@ namespace MessangerWeb.Controllers
             catch (Exception ex)
             {
                 Console.WriteLine($"Error fetching users with last message: {ex.Message}");
-                return GetAllUsers(currentUserId);
+                return await GetAllUsers(currentUserId);
             }
 
             return users;
