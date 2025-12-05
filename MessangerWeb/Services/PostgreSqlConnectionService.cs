@@ -13,8 +13,12 @@ namespace MessangerWeb.Services
         {
             var rawConnectionString = configuration.GetConnectionString("DefaultConnection");
             
+            Console.WriteLine($"[PostgreSqlConnectionService] Raw connection string: '{rawConnectionString}'");
+            
             // Convert Render's postgres:// URL format to Npgsql format if needed
             _connectionString = ConvertConnectionString(rawConnectionString);
+            
+            Console.WriteLine($"[PostgreSqlConnectionService] Converted connection string: '{_connectionString}'");
         }
         
         private string ConvertConnectionString(string connectionString)
