@@ -80,7 +80,8 @@ namespace WebsiteApplication
                 var dbService = scope.ServiceProvider.GetRequiredService<PostgreSqlConnectionService>();
                 try
                 {
-                    var connection = dbService.GetConnectionAsync().Result;
+                    using (var connection = dbService.GetConnectionAsync().Result)
+                    {
                     var createTableQuery = @"
                         CREATE TABLE IF NOT EXISTS students (
                             id SERIAL PRIMARY KEY,
