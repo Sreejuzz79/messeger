@@ -83,7 +83,7 @@ namespace MessangerWeb.Controllers
             {
                 using (var con = await _dbService.GetConnectionAsync())
                 {
-                    await con.OpenAsync();
+
                     Console.WriteLine("Database connection opened successfully");
 
                     string query = @"
@@ -155,7 +155,7 @@ namespace MessangerWeb.Controllers
             {
                 using (var con = await _dbService.GetConnectionAsync())
                 {
-                    await con.OpenAsync();
+
                     string query = "SELECT * FROM students";
 
                     using (var cmd = new NpgsqlCommand(query, con))
@@ -198,7 +198,7 @@ namespace MessangerWeb.Controllers
             {
                 using (var con = await _dbService.GetConnectionAsync())
                 {
-                    await con.OpenAsync();
+
                     string query = @"SELECT * FROM students WHERE id = @id";
 
                     using (var cmd = new NpgsqlCommand(query, con))
@@ -257,7 +257,7 @@ namespace MessangerWeb.Controllers
             {
                 using (var con = await _dbService.GetConnectionAsync())
                 {
-                    await con.OpenAsync();
+
                     string query = @"SELECT * FROM students WHERE id=@id";
 
                     using (var cmd = new NpgsqlCommand(query, con))
@@ -353,7 +353,7 @@ namespace MessangerWeb.Controllers
             {
                 using (var con = await _dbService.GetConnectionAsync())
                 {
-                    await con.OpenAsync();
+
                     string query = @"
                 UPDATE students
                 SET firstname=@FirstName, lastname=@LastName, gender=@Gender, dateOfBirth=@DateOfBirth,
@@ -407,7 +407,7 @@ namespace MessangerWeb.Controllers
 
                 using (var con = await _dbService.GetConnectionAsync())
                 {
-                    await con.OpenAsync();
+
                     string query = @"SELECT * FROM students WHERE id = @id";
 
                     using (var cmd = new NpgsqlCommand(query, con))
@@ -483,7 +483,7 @@ namespace MessangerWeb.Controllers
         {
             using (var con = await _dbService.GetConnectionAsync())
             {
-                await con.OpenAsync();
+
                 string query = @"SELECT password, photo FROM students WHERE id=@id";
 
                 using (var cmd = new NpgsqlCommand(query, con))
