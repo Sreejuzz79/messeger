@@ -74,6 +74,47 @@ namespace WebsiteApplication
 
             var app = builder.Build();
 
+            // Initialize database tables on startup
+            using (var scope = app.Services.CreateScope())
+            {
+                var dbService = scope.ServiceProvider.GetRequiredService<PostgreSqlConnectionService>();
+                try
+                {
+                    var connection = dbService.GetConnectionAsync().Result;
+                    var createTableQuery = @"
+                        CREATE TABLE IF NOT EXISTS students (
+                            id SERIAL PRIMARY KEY,
+                            firstname VARCHAR(100),
+                            lastname VARCHAR(100),
+                            gender VARCHAR(50),
+                            dateofbirth DATE,
+                            email VARCHAR(255) UNIQUE,
+                            phone VARCHAR(50),
+                            education VARCHAR(100),
+                            status VARCHAR(50),
+                            hobbies TEXT,
+                            postalcode VARCHAR(20),
+                            country VARCHAR(100),
+                            state VARCHAR(100),
+                            city VARCHAR(100),
+                            address TEXT,
+                            password VARCHAR(255),
+                            photo BYTEA
+                        );";
+                    
+                    using (var command = new Npgsql.NpgsqlCommand(createTableQuery, connection))
+                    {
+                        command.ExecuteNonQuery();
+                        Console.WriteLine("[Database] Students table checked/created successfully");
+                    }
+                    connection.Close();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[Database] Error initializing database: {ex.Message}");
+                }
+            }
+
             // Use forwarded headers from reverse proxy
             app.UseForwardedHeaders();
 
