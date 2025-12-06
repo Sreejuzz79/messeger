@@ -80,7 +80,6 @@ namespace MessangerWeb.Controllers
 
                 using (var connection = await _dbService.GetConnectionAsync())
                 {
-                    await connection.OpenAsync();
 
                     string query = @"SELECT id, email, firstname, lastname, status 
                                      FROM students 
@@ -148,7 +147,6 @@ namespace MessangerWeb.Controllers
             {
                 using (var connection = await _dbService.GetConnectionAsync())
                 {
-                    await connection.OpenAsync();
                     return true;
                 }
             }
@@ -164,7 +162,6 @@ namespace MessangerWeb.Controllers
             {
                 using (var connection = await _dbService.GetConnectionAsync())
                 {
-                    await connection.OpenAsync();
 
                     string query = @"SELECT COUNT(*) 
                                      FROM students 

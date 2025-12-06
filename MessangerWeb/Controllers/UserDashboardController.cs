@@ -117,7 +117,6 @@ namespace MessangerWeb.Controllers
 
                 using (var connection = await _dbService.GetConnectionAsync())
                 {
-                    connection.Open();
                     var query = @"INSERT INTO messages (sender_email, receiver_email, message, sent_at, is_read) 
                                  VALUES (@SenderEmail, @ReceiverEmail, @Message, NOW(), 0)";
 
@@ -286,7 +285,6 @@ namespace MessangerWeb.Controllers
 
                 using (var connection = await _dbService.GetConnectionAsync())
                 {
-                    connection.Open();
                     string query;
 
                     if (isImage)
@@ -349,7 +347,6 @@ namespace MessangerWeb.Controllers
             {
                 using (var connection = await _dbService.GetConnectionAsync())
                 {
-                    connection.Open();
                     var query = @"SELECT m.*, 
                          s1.firstname as sender_firstname, s1.lastname as sender_lastname,
                          s2.firstname as receiver_firstname, s2.lastname as receiver_lastname
@@ -409,7 +406,6 @@ namespace MessangerWeb.Controllers
             {
                 using (var connection = await _dbService.GetConnectionAsync())
                 {
-                    connection.Open();
                     var query = "SELECT id, firstname, lastname, email, photo FROM students WHERE id = @UserId";
 
                     using (var command = new NpgsqlCommand(query, connection))
@@ -456,7 +452,6 @@ namespace MessangerWeb.Controllers
             {
                 using (var connection = await _dbService.GetConnectionAsync())
                 {
-                    connection.Open();
                     string query = "SELECT id, firstname, lastname, email, status, photo FROM students WHERE status = 'Active' AND id != @CurrentUserId";
 
                     using (var command = new NpgsqlCommand(query, connection))
@@ -506,7 +501,6 @@ namespace MessangerWeb.Controllers
             {
                 using (var connection = await _dbService.GetConnectionAsync())
                 {
-                    connection.Open();
                     var query = "SELECT COUNT(*) FROM students WHERE id = @UserId AND status = 'Active'";
                     using (var command = new NpgsqlCommand(query, connection))
                     {
@@ -567,7 +561,6 @@ namespace MessangerWeb.Controllers
             {
                 using (var connection = await _dbService.GetConnectionAsync())
                 {
-                    connection.Open();
 
                     string query;
                     NpgsqlCommand command;
@@ -657,7 +650,6 @@ namespace MessangerWeb.Controllers
             {
                 using (var connection = await _dbService.GetConnectionAsync())
                 {
-                    connection.Open();
 
                     var groupQuery = @"INSERT INTO `groups` (`group_name`, `created_by`, `created_at`, `group_image`, `updated_at`, `last_activity`) 
                              VALUES (@GroupName, @CreatedBy, NOW(), @GroupImage, NOW(), NOW());
@@ -764,7 +756,6 @@ namespace MessangerWeb.Controllers
             {
                 using (var connection = await _dbService.GetConnectionAsync())
                 {
-                    connection.Open();
 
                     // Insert message with is_read = 0 (unread for everyone initially)
                     var query = @"INSERT INTO group_messages (group_id, sender_email, message, sent_at, is_read) 
@@ -819,7 +810,6 @@ namespace MessangerWeb.Controllers
 
                 using (var connection = await _dbService.GetConnectionAsync())
                 {
-                    connection.Open();
                     string query;
 
                     if (isImage)
@@ -883,7 +873,6 @@ namespace MessangerWeb.Controllers
             {
                 using (var connection = await _dbService.GetConnectionAsync())
                 {
-                    connection.Open();
 
                     // Ensure tracking table exists
                     EnsureGroupMessageReadStatusTableExists(connection);
@@ -963,7 +952,6 @@ namespace MessangerWeb.Controllers
             {
                 using (var connection = await _dbService.GetConnectionAsync())
                 {
-                    connection.Open();
                     var query = @"SELECT g.*, 
                          (SELECT COUNT(*) FROM group_members gm WHERE gm.group_id = g.group_id) as member_count
                          FROM `groups` g
@@ -1017,7 +1005,6 @@ namespace MessangerWeb.Controllers
             {
                 using (var connection = await _dbService.GetConnectionAsync())
                 {
-                    connection.Open();
                     EnsureGroupMessageReadStatusTableExists(connection);
 
                     var query = @"SELECT gm.*, 
@@ -1138,7 +1125,6 @@ namespace MessangerWeb.Controllers
             {
                 using (var connection = await _dbService.GetConnectionAsync())
                 {
-                    connection.Open();
 
                     var query = @"
                 UPDATE messages 
@@ -1170,7 +1156,6 @@ namespace MessangerWeb.Controllers
             {
                 using (var connection = await _dbService.GetConnectionAsync())
                 {
-                    connection.Open();
 
                     // First, ensure the group_message_read_status table exists
                     EnsureGroupMessageReadStatusTableExists(connection);
@@ -1277,7 +1262,6 @@ namespace MessangerWeb.Controllers
 
                 using (var connection = await _dbService.GetConnectionAsync())
                 {
-                    connection.Open();
 
                     // Get group creator
                     var creatorQuery = "SELECT created_by FROM `groups` WHERE group_id = @GroupId";
@@ -1352,7 +1336,6 @@ namespace MessangerWeb.Controllers
             {
                 using (var connection = await _dbService.GetConnectionAsync())
                 {
-                    connection.Open();
 
                     // Check if user is group creator
                     var checkQuery = "SELECT created_by FROM `groups` WHERE group_id = @GroupId";
@@ -1409,7 +1392,6 @@ namespace MessangerWeb.Controllers
 
                 using (var connection = await _dbService.GetConnectionAsync())
                 {
-                    connection.Open();
 
                     var query = @"SELECT s.id, s.firstname, s.lastname, s.email, s.photo
                                  FROM students s
@@ -1478,7 +1460,6 @@ namespace MessangerWeb.Controllers
             {
                 using (var connection = await _dbService.GetConnectionAsync())
                 {
-                    connection.Open();
 
                     // Check if user is group creator
                     var checkQuery = "SELECT created_by FROM `groups` WHERE group_id = @GroupId";
@@ -1528,7 +1509,6 @@ namespace MessangerWeb.Controllers
             {
                 using (var connection = await _dbService.GetConnectionAsync())
                 {
-                    connection.Open();
 
                     // Check if user is group creator
                     var checkQuery = "SELECT created_by FROM `groups` WHERE group_id = @GroupId";
@@ -1625,7 +1605,6 @@ namespace MessangerWeb.Controllers
             {
                 using (var connection = await _dbService.GetConnectionAsync())
                 {
-                    connection.Open();
 
                     string query = @"
                 SELECT 
@@ -1809,7 +1788,6 @@ namespace MessangerWeb.Controllers
         {
             using (var connection = await _dbService.GetConnectionAsync())
             {
-                await connection.OpenAsync();
 
                 // Get receiver email
                 var receiverEmail = await GetUserEmailById(request.ReceiverId);
@@ -1840,7 +1818,6 @@ namespace MessangerWeb.Controllers
         {
             using (var connection = await _dbService.GetConnectionAsync())
             {
-                await connection.OpenAsync();
 
                 var query = "SELECT email FROM students WHERE id = @UserId";
                 using (var command = new NpgsqlCommand(query, connection))
@@ -1857,7 +1834,6 @@ namespace MessangerWeb.Controllers
         {
             using (var connection = await _dbService.GetConnectionAsync())
             {
-                await connection.OpenAsync();
 
                 // Create the call duration message
                 var callMessage = $"{userName} ended a video call (Duration: {request.FormattedDuration})";
