@@ -14,6 +14,9 @@ namespace WebsiteApplication
     {
         public static void Main(string[] args)
         {
+            // Fix for Render's inotify limit issue
+            Environment.SetEnvironmentVariable("DOTNET_USE_POLLING_FILE_WATCHER", "true");
+
             var builder = WebApplication.CreateBuilder(args);
 
             // Configure forwarded headers for reverse proxy (Render)
