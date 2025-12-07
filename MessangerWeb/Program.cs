@@ -85,12 +85,60 @@ namespace WebsiteApplication
                 {
                     using (var connection = dbService.GetConnectionAsync().Result)
                     {
-                        var createTableQuery = "CREATE TABLE IF NOT EXISTS students (id SERIAL PRIMARY KEY, firstname VARCHAR(100), lastname VARCHAR(100), gender VARCHAR(50), dateofbirth DATE, email VARCHAR(255) UNIQUE, phone VARCHAR(50), education VARCHAR(100), status VARCHAR(50), hobbies TEXT, postalcode VARCHAR(20), country VARCHAR(100), state VARCHAR(100), city VARCHAR(100), address TEXT, password VARCHAR(255), photo BYTEA);";
+                        var createTableQueries = @"
+                            CREATE TABLE IF NOT EXISTS students (id SERIAL PRIMARY KEY, firstname VARCHAR(100), lastname VARCHAR(100), gender VARCHAR(50), dateofbirth DATE, email VARCHAR(255) UNIQUE, phone VARCHAR(50), education VARCHAR(100), status VARCHAR(50), hobbies TEXT, postalcode VARCHAR(20), country VARCHAR(100), state VARCHAR(100), city VARCHAR(100), address TEXT, password VARCHAR(255), photo BYTEA);
+                            
+                            CREATE TABLE IF NOT EXISTS messages (
+                                id SERIAL PRIMARY KEY,
+                                sender_email VARCHAR(255),
+                                receiver_email VARCHAR(255),
+                                message TEXT,
+                                sent_at TIMESTAMP,
+                                is_read INT DEFAULT 0,
+                                file_path TEXT,
+                                image_path TEXT,
+                                file_name VARCHAR(255),
+                                file_original_name VARCHAR(255),
+                                is_call_message BOOLEAN DEFAULT FALSE,
+                                call_duration VARCHAR(50),
+                                call_status VARCHAR(50)
+                            );
+
+                            CREATE TABLE IF NOT EXISTS groups (
+                                group_id SERIAL PRIMARY KEY,
+                                group_name VARCHAR(255),
+                                created_by VARCHAR(255),
+                                created_at TIMESTAMP,
+                                group_image BYTEA,
+                                updated_at TIMESTAMP,
+                                last_activity TIMESTAMP
+                            );
+
+                            CREATE TABLE IF NOT EXISTS group_members (
+                                id SERIAL PRIMARY KEY,
+                                group_id INT,
+                                student_email VARCHAR(255),
+                                joined_at TIMESTAMP
+                            );
+
+                            CREATE TABLE IF NOT EXISTS group_messages (
+                                id SERIAL PRIMARY KEY,
+                                group_id INT,
+                                sender_email VARCHAR(255),
+                                message TEXT,
+                                sent_at TIMESTAMP,
+                                is_read INT DEFAULT 0,
+                                file_path TEXT,
+                                image_path TEXT,
+                                file_name VARCHAR(255),
+                                file_original_name VARCHAR(255)
+                            );
+                        ";
                         
-                        using (var command = new Npgsql.NpgsqlCommand(createTableQuery, connection))
+                        using (var command = new Npgsql.NpgsqlCommand(createTableQueries, connection))
                         {
                             command.ExecuteNonQuery();
-                            Console.WriteLine("[Database] Students table checked/created successfully");
+                            Console.WriteLine("[Database] All tables (students, messages, groups, etc.) checked/created successfully");
                         }
                     }
                 }
