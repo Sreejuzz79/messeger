@@ -410,7 +410,14 @@ namespace MessangerWeb.Controllers
 
                     using (var command = new NpgsqlCommand(query, connection))
                     {
-                        command.Parameters.AddWithValue("@UserId", userId);
+                        if (int.TryParse(userId, out int id))
+                        {
+                            command.Parameters.AddWithValue("@UserId", id);
+                        }
+                        else
+                        {
+                            return null;
+                        }
 
                         using (var reader = command.ExecuteReader())
                         {
@@ -456,7 +463,14 @@ namespace MessangerWeb.Controllers
 
                     using (var command = new NpgsqlCommand(query, connection))
                     {
-                        command.Parameters.AddWithValue("@CurrentUserId", currentUserId);
+                        if (int.TryParse(currentUserId, out int id))
+                        {
+                            command.Parameters.AddWithValue("@CurrentUserId", id);
+                        }
+                        else
+                        {
+                            command.Parameters.AddWithValue("@CurrentUserId", 0); // Invalid ID
+                        }
 
                         using (var reader = command.ExecuteReader())
                         {
@@ -504,9 +518,13 @@ namespace MessangerWeb.Controllers
                     var query = "SELECT COUNT(*) FROM students WHERE id = @UserId AND status = 'Active'";
                     using (var command = new NpgsqlCommand(query, connection))
                     {
-                        command.Parameters.AddWithValue("@UserId", userId);
-                        long result = (long)command.ExecuteScalar();
-                        return result > 0;
+                        if (int.TryParse(userId, out int id))
+                        {
+                            command.Parameters.AddWithValue("@UserId", id);
+                            long result = (long)command.ExecuteScalar();
+                            return result > 0;
+                        }
+                        return false;
                     }
                 }
             }
@@ -586,7 +604,14 @@ namespace MessangerWeb.Controllers
                         command = new NpgsqlCommand(query, connection);
                         command.Parameters.AddWithValue("@FirstName", model.FirstName);
                         command.Parameters.AddWithValue("@LastName", model.LastName);
-                        command.Parameters.AddWithValue("@UserId", model.UserId);
+                        if (int.TryParse(model.UserId, out int id))
+                {
+                    command.Parameters.AddWithValue("@UserId", id);
+                }
+                else
+                {
+                    return Json(new { success = false, message = "Invalid User ID" });
+                }
                     }
 
                     int rowsAffected = command.ExecuteNonQuery();
